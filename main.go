@@ -27,6 +27,13 @@ type Link struct {
 	Hash      string
 	LongURL   string
 }
+// LinkAnalytics struct to hold info about link analytics
+type LinkAnalytics struct {
+	RequestID string
+	ShortLink string
+	SourceIP  string
+	UserAgent string
+}
 
 // BodyRequest is our self-made struct to process JSON request from Client
 type BodyRequest struct {
@@ -149,6 +156,36 @@ func GetShortLinkFromHash(Hash string) (Link, error) {
 	}
 }
 
+// PutLinkAnalyticsInDynamoDB query the DynamoDB 
+func PutLinkAnalyticsInDynamoDB(request events.APIGatewayProxyRequest, ShortLink string) (LinkAnalytics, error) {
+
+	item := LinkAnalytics{
+		RequestID: request.RequestContext.RequestID,
+		ShortLink: ShortLink,
+		SourceIP: request.RequestContext.Identity.SourceIP,
+		UserAgent: request.RequestContext.Identity.UserAgent,
+	}
+	
+
+	// Initialize a session that the SDK will use to load	
+	session := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(endpoints.UsEast1RegionID),
+	}))
+	// Create DynamoDB client
+	svc := dynamodb.New(session)
+	tableName := "LinkAnalytics"
+	PutItemVal, Err := dynamodbattribute.MarshalMap(item)
+	input := &dynamodb.PutItemInput{
+    Item:      PutItemVal,
+    TableName: aws.String(tableName),
+	}
+	_, Err = svc.PutItem(input)
+	if Err != nil {
+		fmt.Println(Err.Error())
+		return LinkAnalytics{}, Err
+	}
+	return item, nil
+}
 // PutLinkItemFromDynamoDB query the DynamoDB 
 func PutLinkItemFromDynamoDB(PutItemStruct Link) (Link, error) {
 	// Initialize a session that the SDK will use to load	
@@ -175,10 +212,12 @@ func PutLinkItemFromDynamoDB(PutItemStruct Link) (Link, error) {
 
 // Handler is your Lambda function handler
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {		
-	fmt.Printf("request %+v\n", request)
+	
+
 	if request.HTTPMethod == "GET" {
 		fmt.Printf("GET METHOD\n")
 		ShortLink := request.QueryStringParameters["ShortLink"]
+		PutLinkAnalyticsInDynamoDB(request, ShortLink)
 		fmt.Printf("short link %s ", ShortLink)
 		if ShortLink == "" {
 			return events.APIGatewayProxyResponse{Body: " { \"error\" : \"Short link not provided.\" } ", StatusCode: 400}, nil

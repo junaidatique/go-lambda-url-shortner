@@ -1,24 +1,24 @@
-resource "aws_dynamodb_table" "link" {
-  name           = "Link"
+resource "aws_dynamodb_table" "linkAnalytics" {
+  name           = "LinkAnalytics"
   billing_mode   = "PROVISIONED"
-  hash_key       = "ShortLink"
+  hash_key       = "RequestID"
   read_capacity  = 20
   write_capacity = 20
+
+  attribute {
+    name = "RequestID"
+    type = "S"
+  }
 
   attribute {
     name = "ShortLink"
     type = "S"
   }
 
-  attribute {
-    name = "Hash"
-    type = "S"
-  }
-
   global_secondary_index {
-    name            = "HashIndex"
-    hash_key        = "Hash"
-    projection_type = "KEYS_ONLY"
+    name            = "ShortLinkIndex"
+    hash_key        = "ShortLink"
+    projection_type = "ALL"
     read_capacity   = 20
     write_capacity  = 20
   }
@@ -26,8 +26,8 @@ resource "aws_dynamodb_table" "link" {
 }
 
 # POLICIES
-resource "aws_iam_role_policy" "dynamodb-lambda-policy" {
-  name   = "dynamodb_lambda_policy"
+resource "aws_iam_role_policy" "dynamodb-lambda-policy-linkAnalytics" {
+  name   = "dynamodb_lambda_policy_linkAnalytics"
   role   = aws_iam_role.lambda_exec.id
   policy = <<EOF
 {
@@ -42,7 +42,7 @@ resource "aws_iam_role_policy" "dynamodb-lambda-policy" {
         "dynamodb:UpdateItem",
         "dynamodb:DeleteItem"
       ],
-      "Resource": "${aws_dynamodb_table.link.arn}"
+      "Resource": "${aws_dynamodb_table.linkAnalytics.arn}"
     },
     {
       "Effect": "Allow",
@@ -53,7 +53,7 @@ resource "aws_iam_role_policy" "dynamodb-lambda-policy" {
         "dynamodb:UpdateItem",
         "dynamodb:DeleteItem"
       ],
-      "Resource": "${aws_dynamodb_table.link.arn}/index/*"
+      "Resource": "${aws_dynamodb_table.linkAnalytics.arn}/index/*"
     }
   ]
 }
