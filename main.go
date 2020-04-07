@@ -175,6 +175,7 @@ func PutLinkItemFromDynamoDB(PutItemStruct Link) (Link, error) {
 
 // Handler is your Lambda function handler
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {		
+	fmt.Printf("request %+v\n", request)
 	if request.HTTPMethod == "GET" {
 		fmt.Printf("GET METHOD\n")
 		ShortLink := request.QueryStringParameters["ShortLink"]

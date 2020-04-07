@@ -12,6 +12,8 @@
 *.out
 infra/secret.tfvars
 .vscode
+build/*
+build
 # Local .terraform directories
 **/.terraform/*
 
