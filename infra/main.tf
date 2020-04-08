@@ -1,20 +1,20 @@
 provider "aws" {
-  region = "us-east-1"  
+  region = "us-east-1"
 }
 
 
 variable "app_name" {
   description = "App Name"
-  default = "lambda-url-shortner"
+  default     = "lambda-url-shortner"
 }
 
 variable "app_env" {
   description = "Application Env Tag"
-  default = "dev"
+  default     = "dev"
 }
 
 locals {
-  app_id = "${lower(var.app_name)}-${lower(var.app_env)}-${random_id.unique_suffix.hex}"
+  app_id        = "${lower(var.app_name)}-${lower(var.app_env)}-${random_id.unique_suffix.hex}"
   link_app_name = "${lower(var.app_name)}"
 }
 

@@ -11,4 +11,4 @@ apply:
 	terraform apply -var-file="infra/secret.tfvars" --auto-approve infra 
 
 destroy:
-	terraform destroy --auto-approve infra 
+	terraform destroy -var-file="infra/secret.tfvars" --auto-approve infra 

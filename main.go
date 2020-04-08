@@ -220,19 +220,43 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		PutLinkAnalyticsInDynamoDB(request, ShortLink)
 		fmt.Printf("short link %s ", ShortLink)
 		if ShortLink == "" {
-			return events.APIGatewayProxyResponse{Body: " { \"error\" : \"Short link not provided.\" } ", StatusCode: 400}, nil
+			return events.APIGatewayProxyResponse{
+				Body: "{\"error\" : \"Short link not provided.\"} ", 
+				StatusCode: 400,
+				Headers: map[string]string{
+					"Access-Control-Allow-Origin": "*",
+				},
+			}, nil
 		}
 		item, Err := GetItemFromDynamoDB("ShortLink", ShortLink)
 		if Err != nil {
 			ErrorMessage := fmt.Sprintf(" { \"error\" : \"%s\" } ", Err.Error())
-			return events.APIGatewayProxyResponse{Body: ErrorMessage, StatusCode: 400}, nil
+			return events.APIGatewayProxyResponse{
+				Body: ErrorMessage, 
+				StatusCode: 400,
+				Headers: map[string]string{
+					"Access-Control-Allow-Origin" : "*",
+				},
+			}, nil
 		}
 		if (item == Link{}) {
 			ErrorMessage := fmt.Sprintf(" { \"error\" : \"Short link not found.\" } ")
-			return events.APIGatewayProxyResponse{Body: ErrorMessage, StatusCode: 400}, nil
+			return events.APIGatewayProxyResponse{
+				Body: ErrorMessage, 
+				StatusCode: 400,
+				Headers: map[string]string{
+					"Access-Control-Allow-Origin" : "*",
+				},
+			}, nil
 		}
 		message := fmt.Sprintf(" { \"ShortLink\" : \"%s\", \"LongURL\" : \"%s\" } ", item.ShortLink, item.LongURL)
-		return events.APIGatewayProxyResponse{Body: message, StatusCode: 200}, nil
+		return events.APIGatewayProxyResponse{
+			Body: message, 
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Access-Control-Allow-Origin" : "*",
+			},
+		}, nil
 	} else if request.HTTPMethod == "POST" {
 		fmt.Printf("POST METHOD\n")
 
@@ -245,7 +269,13 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		// Unmarshal the json, return 404 if Error
 		Err := json.Unmarshal([]byte(request.Body), &bodyRequest)
 		if Err != nil {
-			return events.APIGatewayProxyResponse{Body: Err.Error(), StatusCode: 404}, nil
+			return events.APIGatewayProxyResponse{
+				Body: Err.Error(), 
+				StatusCode: 404,
+				Headers: map[string]string{
+					"Access-Control-Allow-Origin" : "*",
+				},
+			}, nil
 		}
 		fmt.Printf("bodyRequest: %+v\n", bodyRequest)
 		LongURLErr := validation.Validate(bodyRequest.RequestLongURL,
@@ -254,7 +284,13 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 					)
 		fmt.Printf("LongURLErr: %s\n", LongURLErr)
 		if LongURLErr != nil {
-			return events.APIGatewayProxyResponse{Body: " { \"error\" : \"URL is not valid \" } ", StatusCode: 404}, nil
+			return events.APIGatewayProxyResponse{
+				Body: "{\"error\" : \"URL is not valid\"}", 
+				StatusCode: 404,
+				Headers: map[string]string{
+					"Access-Control-Allow-Origin" : "*",
+				},
+			}, nil
 		}
 		fmt.Printf("RequestLongURL: %s\n", bodyRequest.RequestLongURL)		
 		LongURLHashBytes := sha256.Sum256([]byte(bodyRequest.RequestLongURL))
@@ -263,7 +299,13 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		item, Err := GetShortLinkFromHash(LongURLHash)
 		if Err != nil {
 			ErrorMessage := fmt.Sprintf(" { \"error\" : \"%s\" } ", Err.Error())
-			return events.APIGatewayProxyResponse{Body: ErrorMessage, StatusCode: 400}, nil
+			return events.APIGatewayProxyResponse{
+				Body: ErrorMessage, 
+				StatusCode: 400,
+				Headers: map[string]string{
+					"Access-Control-Allow-Origin" : "*",
+				},
+			}, nil
 		}
 		fmt.Printf("item %s\n", item)
 		bodyResponse := BodyResponse{}
@@ -278,7 +320,13 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 			_, Err = PutLinkItemFromDynamoDB(item)
 			if Err != nil {
 				ErrorMessage := fmt.Sprintf(" { \"error\" : \"%s\" } ", Err.Error())
-				return events.APIGatewayProxyResponse{Body: ErrorMessage, StatusCode: 400}, nil
+				return events.APIGatewayProxyResponse{
+					Body: ErrorMessage, 
+					StatusCode: 400,
+					Headers: map[string]string{
+						"Access-Control-Allow-Origin" : "*",
+					},
+				}, nil
 			}
 			bodyResponse = BodyResponse{
 				ResponseShortLink: ShortLinkRedisVal,
@@ -293,13 +341,30 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		response, Err := json.Marshal(&bodyResponse)
 		if Err != nil {
 			ErrorMessage := fmt.Sprintf(" { \"error\" : \"%s\" } ", Err.Error())
-			return events.APIGatewayProxyResponse{Body: ErrorMessage, StatusCode: 404}, nil
+			return events.APIGatewayProxyResponse{
+				Body: ErrorMessage, 
+				StatusCode: 404,
+				Headers: map[string]string{
+					"Access-Control-Allow-Origin" : "*",
+				},
+			}, nil
 		}
 		
-		return events.APIGatewayProxyResponse{Body: string(response), StatusCode: 200}, nil
+		return events.APIGatewayProxyResponse{
+			Body: string(response), 
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Access-Control-Allow-Origin" : "*",
+			},
+		}, nil
 	} else {
 		fmt.Printf("NEITHER\n")
-		return events.APIGatewayProxyResponse{}, nil
+		return events.APIGatewayProxyResponse{
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Access-Control-Allow-Origin" : "*",
+			},
+		}, nil
 	}
 }
 
