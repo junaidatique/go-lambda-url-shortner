@@ -243,7 +243,7 @@ func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 			ErrorMessage := fmt.Sprintf(" { \"error\" : \"Short link not found.\" } ")
 			return events.APIGatewayProxyResponse{
 				Body: ErrorMessage, 
-				StatusCode: 400,
+				StatusCode: 404,
 				Headers: map[string]string{
 					"Access-Control-Allow-Origin" : "*",
 				},
